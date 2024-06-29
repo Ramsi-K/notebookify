@@ -16,3 +16,15 @@ Git LFS was explored as a potential solution for handling large notebooks in thi
 - Increased complexity in collaboration.
 
 For more details, see [`Git_LFS_Findings.md`](Git_LFS_Findings.md).
+
+### Day 4: Google Drive API Integration
+
+Integrated Google Drive API to simplify file sharing for large notebooks. The initial script includes:
+
+- Authentication using Google Drive API.
+- File upload functionality to a specified folder.
+
+To test the integration:
+
+1. Install the required dependencies: `pip install -r requirements.txt`.
+2. Run `google_drive_integration.py` to authenticate and upload a file to your Drive.
