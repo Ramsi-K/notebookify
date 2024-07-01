@@ -12,6 +12,9 @@ def authenticate_drive():
 
 # Upload a file to Google Drive
 def upload_file_to_drive(drive, file_path, folder_id=None):
+    if not os.path.exists(file_path):
+        print(f"Error: File {file_path} does not exist.")
+        return
     file = drive.CreateFile(
         {
             "title": os.path.basename(file_path),
@@ -24,8 +27,8 @@ def upload_file_to_drive(drive, file_path, folder_id=None):
 
 
 if __name__ == "__main__":
-    # Example usage
+    # Example usage: Upload a converted Markdown file
     drive = authenticate_drive()
-    file_path = "example_file.txt"  # Replace with a test file path
+    file_path = "example_notebook.md"  # Replace with the Markdown file path
     folder_id = None  # Replace with Google Drive folder ID if needed
     upload_file_to_drive(drive, file_path, folder_id)
