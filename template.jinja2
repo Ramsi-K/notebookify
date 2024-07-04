@@ -1,0 +1,21 @@
+{% for cell in cells %}
+{% if cell.cell_type == 'markdown' %}
+{{ cell.source }}
+{% elif cell.cell_type == 'code' %}
+
+``` python
+{{ cell.source }}
+```
+
+{% for output in cell.outputs %}
+{% if output.output_type == 'execute_result' %}
+{% if 'image/png' in output.data %}
+![Output](data:image/png;base64,{{ output.data['image/png'] }})
+{% elif 'text/plain' in output.data %}
+{{ output.data['text/plain'] }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+[View on Colab](https://colab.research.google.com/github/{{ repo_name }}/blob/main/{{ notebook_name }})

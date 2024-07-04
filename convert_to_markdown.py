@@ -4,6 +4,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 import nbconvert
 import nbformat
+from jinja2 import Environment, FileSystemLoader
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
@@ -64,6 +65,29 @@ def upload_to_google_drive(service, file_path):
     )
 
 
+def convert_to_markdown_with_template(
+    notebook_path, output_path, template_path
+):
+    # Load the Jupyter notebook
+    with open(notebook_path, "r") as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    # Load the Jinja2 environment and template
+    env = Environment(loader=FileSystemLoader("/path/to/templates"))
+    template = env.get_template(template_path)
+
+    # Render the Markdown output
+    markdown_output = template.render(
+        cells=notebook["cells"],
+        repo_name="Ramsi-K/notebookify",
+        notebook_name=notebook_path.split("/")[-1],
+    )
+
+    # Save to output path
+    with open(output_path, "w") as f:
+        f.write(markdown_output)
+
+
 if __name__ == "__main__":
     notebook_path = "example_notebook.ipynb"
     output_dir = "markdown_outputs"
@@ -78,3 +102,7 @@ if __name__ == "__main__":
         upload_to_google_drive(service, markdown_file)
     except Exception as e:
         print(f"Error during Google Drive upload: {e}")
+
+
+# # Example usage:
+# convert_to_markdown_with_template("example_notebook.ipynb", "output.md", "template.jinja2")
