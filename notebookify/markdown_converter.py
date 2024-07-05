@@ -1,4 +1,5 @@
 import os
+import shutil
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
@@ -7,6 +8,35 @@ import nbformat
 from jinja2 import Environment, FileSystemLoader
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+
+
+class MarkdownConverter:
+    def __init__(self, template_dir):
+        self.env = Environment(loader=FileSystemLoader(template_dir))
+
+    def convert(self, notebook_path, output_path, template_name):
+        with open(notebook_path, "r") as f:
+            notebook = nbformat.read(f, as_version=4)
+
+        template = self.env.get_template(template_name)
+        markdown_output = template.render(
+            cells=notebook["cells"],
+            notebook_name=os.path.basename(notebook_path),
+        )
+
+        with open(output_path, "w") as f:
+            f.write(markdown_output)
+
+    @staticmethod
+    def cleanup_folder(folder_path):
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+
+
+# Example Usage:
+# converter = MarkdownConverter(template_dir='path/to/templates')
+# converter.convert('example_notebook.ipynb', 'output.md', 'template.jinja2')
+# converter.cleanup_folder('path/to/temp_folder')
 
 
 def convert_notebook_to_markdown(notebook_path, output_dir):
@@ -88,6 +118,9 @@ def convert_to_markdown_with_template(
         f.write(markdown_output)
 
 
+# # Example usage:
+# convert_to_markdown_with_template("example_notebook.ipynb", "output.md", "template.jinja2")
+
 if __name__ == "__main__":
     notebook_path = "example_notebook.ipynb"
     output_dir = "markdown_outputs"
@@ -102,7 +135,3 @@ if __name__ == "__main__":
         upload_to_google_drive(service, markdown_file)
     except Exception as e:
         print(f"Error during Google Drive upload: {e}")
-
-
-# # Example usage:
-# convert_to_markdown_with_template("example_notebook.ipynb", "output.md", "template.jinja2")
