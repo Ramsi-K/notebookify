@@ -18,3 +18,7 @@ Notebookify is the next evolution of the initial convert_to_markdown.py script. 
 ## Why Notebookify?
 
 The project’s new name represents its goal: to simplify and streamline the process of converting, managing, and sharing notebooks in a flexible and user-friendly manner. Whether for Markdown conversion, cloud integration, or custom templates, Notebookify is designed to adapt to diverse workflows.
+
+### Known Issues
+
+- Plotly static snapshot functionality is still under development. Currently, the tool identifies Plotly outputs but does not generate snapshots.

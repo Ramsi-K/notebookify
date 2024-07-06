@@ -95,6 +95,25 @@ def upload_to_google_drive(service, file_path):
     )
 
 
+def save_plotly_snapshot(data, output_dir):
+    """
+    Attempt to save Plotly visualizations as static images.
+    Args:
+        data (dict): Plotly data from the notebook cell.
+        output_dir (str): Directory where the snapshot will be saved.
+    """
+    print(
+        "Plotly visualization detected. Static snapshot functionality is under development."
+    )
+    # Placeholder logic: This can later include plotly.io.write_image or other libraries for snapshots.
+    snapshot_path = os.path.join(output_dir, "plotly_snapshot_placeholder.md")
+    with open(snapshot_path, "w") as f:
+        f.write(
+            "# Plotly Snapshot Placeholder\n\nThis feature is under development."
+        )
+    return snapshot_path
+
+
 def convert_to_markdown_with_template(
     notebook_path, output_path, template_path
 ):
@@ -106,11 +125,22 @@ def convert_to_markdown_with_template(
     env = Environment(loader=FileSystemLoader("/path/to/templates"))
     template = env.get_template(template_path)
 
+    # Prepare the cells for rendering
+    for cell in notebook["cells"]:
+        if "outputs" in cell:
+            for output in cell["outputs"]:
+                if "application/vnd.plotly.v1+json" in output.get("data", {}):
+                    print("Plotly visualization found.")
+                    save_plotly_snapshot(
+                        output["data"]["application/vnd.plotly.v1+json"],
+                        os.path.dirname(output_path),
+                    )
+
     # Render the Markdown output
     markdown_output = template.render(
         cells=notebook["cells"],
         repo_name="Ramsi-K/notebookify",
-        notebook_name=notebook_path.split("/")[-1],
+        notebook_name=os.path.basename(notebook_path),
     )
 
     # Save to output path

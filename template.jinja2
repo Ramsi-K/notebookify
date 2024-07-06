@@ -9,11 +9,19 @@
 
 {% for output in cell.outputs %}
 {% if output.output_type == 'execute_result' %}
-{% if 'image/png' in output.data %}
-![Output](data:image/png;base64,{{ output.data['image/png'] }})
-{% elif 'text/plain' in output.data %}
-{{ output.data['text/plain'] }}
-{% endif %}
+    {% if 'image/png' in output.data %}
+        ![Output](data:image/png;base64,{{ output.data['image/png'] }})
+    {% elif 'text/plain' in output.data %}
+        {{ output.data['text/plain'] }}
+    {% elif output.output_type == 'execute_result' %}
+        {% if 'application/vnd.plotly.v1+json' in output.data %}
+            **Plotly visualization detected: Static snapshot not yet supported.**
+        {% elif 'image/png' in output.data %}
+            ![Output](data:image/png;base64,{{ output.data['image/png'] }})
+        {% elif 'text/plain' in output.data %}
+            {{ output.data['text/plain'][:500] + "..." if output.data['text/plain']|length > 500 else output.data['text/plain'] }}
+        {% endif %}
+    {% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
