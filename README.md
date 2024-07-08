@@ -19,6 +19,12 @@ Notebookify is the next evolution of the initial convert_to_markdown.py script. 
 
 The project’s new name represents its goal: to simplify and streamline the process of converting, managing, and sharing notebooks in a flexible and user-friendly manner. Whether for Markdown conversion, cloud integration, or custom templates, Notebookify is designed to adapt to diverse workflows.
 
+### New Feature
+
+- Plotly visualizations are now saved as static PNG snapshots using `plotly.io.write_image`.
+
 ### Known Issues
 
-- Plotly static snapshot functionality is still under development. Currently, the tool identifies Plotly outputs but does not generate snapshots.
+- If `kaleido` is not installed, Plotly snapshots may not work. Install it with `pip install -U kaleido`.
+
+

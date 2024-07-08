@@ -6,6 +6,7 @@ from googleapiclient.http import MediaFileUpload
 import nbconvert
 import nbformat
 from jinja2 import Environment, FileSystemLoader
+import plotly.io as pio
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
@@ -95,23 +96,26 @@ def upload_to_google_drive(service, file_path):
     )
 
 
-def save_plotly_snapshot(data, output_dir):
+def save_plotly_snapshot(data, output_dir, filename="plotly_snapshot.png"):
     """
-    Attempt to save Plotly visualizations as static images.
+    Save Plotly visualizations as static images.
     Args:
         data (dict): Plotly data from the notebook cell.
         output_dir (str): Directory where the snapshot will be saved.
+        filename (str): Name of the snapshot file.
     """
-    print(
-        "Plotly visualization detected. Static snapshot functionality is under development."
-    )
-    # Placeholder logic: This can later include plotly.io.write_image or other libraries for snapshots.
-    snapshot_path = os.path.join(output_dir, "plotly_snapshot_placeholder.md")
-    with open(snapshot_path, "w") as f:
-        f.write(
-            "# Plotly Snapshot Placeholder\n\nThis feature is under development."
-        )
-    return snapshot_path
+    try:
+        fig = pio.from_json(data)
+        snapshot_path = os.path.join(output_dir, filename)
+        fig.write_image(snapshot_path)
+        print(f"Saved Plotly snapshot to {snapshot_path}")
+        return snapshot_path
+    except Exception as e:
+        print(f"Error saving Plotly snapshot: {e}")
+        placeholder_path = os.path.join(output_dir, "plotly_snapshot_error.md")
+        with open(placeholder_path, "w") as f:
+            f.write(f"# Plotly Snapshot Error\n\nError: {e}")
+        return placeholder_path
 
 
 def convert_to_markdown_with_template(
@@ -131,10 +135,12 @@ def convert_to_markdown_with_template(
             for output in cell["outputs"]:
                 if "application/vnd.plotly.v1+json" in output.get("data", {}):
                     print("Plotly visualization found.")
-                    save_plotly_snapshot(
+                    plotly_snapshot_path = save_plotly_snapshot(
                         output["data"]["application/vnd.plotly.v1+json"],
                         os.path.dirname(output_path),
+                        f"{os.path.basename(output_path).replace('.md', '')}_plotly.png",
                     )
+                    output["plotly_snapshot"] = plotly_snapshot_path
 
     # Render the Markdown output
     markdown_output = template.render(

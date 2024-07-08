@@ -15,7 +15,7 @@
         {{ output.data['text/plain'] }}
     {% elif output.output_type == 'execute_result' %}
         {% if 'application/vnd.plotly.v1+json' in output.data %}
-            **Plotly visualization detected: Static snapshot not yet supported.**
+            ![Plotly Visualization]({{ output.plotly_snapshot }})
         {% elif 'image/png' in output.data %}
             ![Output](data:image/png;base64,{{ output.data['image/png'] }})
         {% elif 'text/plain' in output.data %}
