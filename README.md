@@ -22,6 +22,8 @@ The project’s new name represents its goal: to simplify and streamline the pro
 ### New Feature
 
 - Plotly visualizations are now saved as static PNG snapshots using `plotly.io.write_image`.
+- **Detailed Logging**: Logs all major actions and errors during notebook conversion, uploads, and rendering.
+  - Logs are stored in `notebookify.log`.
 
 ### Known Issues
 
