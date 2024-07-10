@@ -39,8 +39,19 @@ class MarkdownConverter:
 
     @staticmethod
     def cleanup_folder(folder_path):
-        if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
+        """
+        Remove a folder and its contents if it exists.
+        """
+        try:
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+                logger.info(f"Successfully cleaned up folder: {folder_path}")
+            else:
+                logger.warning(
+                    f"Folder does not exist and cannot be cleaned: {folder_path}"
+                )
+        except Exception as e:
+            logger.error(f"Error during folder cleanup: {e}")
 
 
 # Example Usage:
@@ -49,11 +60,27 @@ class MarkdownConverter:
 # converter.cleanup_folder('path/to/temp_folder')
 
 
+def ensure_folder_exists(folder_path):
+    """
+    Ensure a folder exists, creating it if necessary.
+    """
+    try:
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            logger.info(f"Created folder: {folder_path}")
+        else:
+            logger.info(f"Folder already exists: {folder_path}")
+    except Exception as e:
+        logger.error(f"Error creating folder {folder_path}: {e}")
+
+
 def convert_notebook_to_markdown(notebook_path, output_dir):
     """
     Converts a notebook file to a Markdown file and saves it to the output directory.
     """
     logger.info(f"Starting Markdown conversion for {notebook_path}")
+    ensure_folder_exists(output_dir)  # Ensure the output directory exists
+
     try:
         with open(notebook_path, "r", encoding="utf-8") as f:
             notebook = nbformat.read(f, as_version=4)

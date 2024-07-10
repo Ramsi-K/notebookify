@@ -19,11 +19,13 @@ Notebookify is the next evolution of the initial convert_to_markdown.py script. 
 
 The project’s new name represents its goal: to simplify and streamline the process of converting, managing, and sharing notebooks in a flexible and user-friendly manner. Whether for Markdown conversion, cloud integration, or custom templates, Notebookify is designed to adapt to diverse workflows.
 
-### New Feature
+### Features
 
 - Plotly visualizations are now saved as static PNG snapshots using `plotly.io.write_image`.
 - **Detailed Logging**: Logs all major actions and errors during notebook conversion, uploads, and rendering.
   - Logs are stored in `notebookify.log`.
+- **Automatic Folder Cleanup**: Ensures temporary files and folders are cleaned up after processing.
+- **Modular Folder Management**: Handles folder creation and resource management efficiently for batch processing.
 
 ### Known Issues
 
