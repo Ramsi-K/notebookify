@@ -26,9 +26,8 @@ The project’s new name represents its goal: to simplify and streamline the pro
   - Logs are stored in `notebookify.log`.
 - **Automatic Folder Cleanup**: Ensures temporary files and folders are cleaned up after processing.
 - **Modular Folder Management**: Handles folder creation and resource management efficiently for batch processing.
+- **Batch Processing**: Convert and upload multiple notebooks in a single execution, streamlining the workflow for large-scale projects.
 
 ### Known Issues
 
 - If `kaleido` is not installed, Plotly snapshots may not work. Install it with `pip install -U kaleido`.
-
-

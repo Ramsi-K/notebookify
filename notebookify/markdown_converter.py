@@ -141,6 +141,22 @@ def upload_to_google_drive(service, file_path):
     )
 
 
+def process_batch_notebooks(notebook_paths, output_dir, service):
+    """
+    Converts a batch of notebooks to Markdown and uploads them to Google Drive.
+    """
+    ensure_folder_exists(output_dir)
+    for notebook_path in notebook_paths:
+        try:
+            logger.info(f"Processing notebook: {notebook_path}")
+            markdown_file = convert_notebook_to_markdown(
+                notebook_path, output_dir
+            )
+            upload_to_google_drive(service, markdown_file)
+        except Exception as e:
+            logger.error(f"Error processing {notebook_path}: {e}")
+
+
 def save_plotly_snapshot(data, output_dir, filename="plotly_snapshot.png"):
     """
     Save Plotly visualizations as static images.
@@ -205,15 +221,28 @@ def convert_to_markdown_with_template(
 
 if __name__ == "__main__":
     notebook_path = "example_notebook.ipynb"
+    notebook_paths = [
+        "notebooks/example1.ipynb",
+        "notebooks/example2.ipynb",
+        "notebooks/example3.ipynb",
+    ]
     output_dir = "markdown_outputs"
 
     # Convert the notebook
     markdown_file = convert_notebook_to_markdown(notebook_path, output_dir)
     logger.info(f"Converted notebook saved to: {markdown_file}")
 
-    # Authenticate and upload to Google Drive
+    # Authenticate with Google Drive
     try:
         service = authenticate_google_drive()
-        upload_to_google_drive(service, markdown_file)
     except Exception as e:
-        logger.error(f"Error during Google Drive upload: {e}")
+        logger.error(f"Authentication failed: {e}")
+        service = None
+
+    # Process batch of notebooks
+    if service:
+        process_batch_notebooks(notebook_paths, output_dir, service)
+    else:
+        logger.warning(
+            "Google Drive service unavailable. Batch upload skipped."
+        )
