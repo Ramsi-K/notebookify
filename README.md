@@ -27,6 +27,8 @@ The project’s new name represents its goal: to simplify and streamline the pro
 - **Automatic Folder Cleanup**: Ensures temporary files and folders are cleaned up after processing.
 - **Modular Folder Management**: Handles folder creation and resource management efficiently for batch processing.
 - **Batch Processing**: Convert and upload multiple notebooks in a single execution, streamlining the workflow for large-scale projects.
+- **Enhanced Output Formatting**: The Jinja2 templates now handle Markdown, code, text streams, and static images with appropriate formatting.
+
 
 ### Known Issues
 

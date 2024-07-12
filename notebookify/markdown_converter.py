@@ -24,7 +24,9 @@ class MarkdownConverter:
     def __init__(self, template_dir):
         self.env = Environment(loader=FileSystemLoader(template_dir))
 
-    def convert(self, notebook_path, output_path, template_name):
+    def convert(
+        self, notebook_path, output_path, template_name="template.jinja2"
+    ):
         with open(notebook_path, "r") as f:
             notebook = nbformat.read(f, as_version=4)
 
