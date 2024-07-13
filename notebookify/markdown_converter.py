@@ -23,21 +23,31 @@ SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 class MarkdownConverter:
     def __init__(self, template_dir):
         self.env = Environment(loader=FileSystemLoader(template_dir))
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
 
     def convert(
         self, notebook_path, output_path, template_name="template.jinja2"
     ):
-        with open(notebook_path, "r") as f:
-            notebook = nbformat.read(f, as_version=4)
+        try:
+            self.logger.info(f"Converting notebook: {notebook_path}")
+            with open(notebook_path, "r") as f:
+                notebook = nbformat.read(f, as_version=4)
 
-        template = self.env.get_template(template_name)
-        markdown_output = template.render(
-            cells=notebook["cells"],
-            notebook_name=os.path.basename(notebook_path),
-        )
+            template = self.env.get_template(template_name)
+            markdown_output = template.render(
+                cells=notebook["cells"],
+                notebook_name=os.path.basename(notebook_path),
+            )
 
-        with open(output_path, "w") as f:
-            f.write(markdown_output)
+            with open(output_path, "w") as f:
+                f.write(markdown_output)
+
+            self.logger.info(
+                f"Conversion complete. Output saved to: {output_path}"
+            )
+        except Exception as e:
+            self.logger.error(f"Error converting notebook: {e}")
 
     @staticmethod
     def cleanup_folder(folder_path):

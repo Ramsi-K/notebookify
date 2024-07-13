@@ -29,7 +29,12 @@ The project’s new name represents its goal: to simplify and streamline the pro
 - **Batch Processing**: Convert and upload multiple notebooks in a single execution, streamlining the workflow for large-scale projects.
 - **Enhanced Output Formatting**: The Jinja2 templates now handle Markdown, code, text streams, and static images with appropriate formatting.
 
-
 ### Known Issues
 
 - If `kaleido` is not installed, Plotly snapshots may not work. Install it with `pip install -U kaleido`.
+
+### Known Issues with Large Notebooks
+
+- **Interactive Visualizations**: Some Plotly and widget outputs are not fully rendered.
+- **Conversion Time**: Processing large notebooks can take several minutes.
+- **Missing Outputs**: Certain edge-case outputs may not appear due to Jinja2 or nbconvert limitations.
