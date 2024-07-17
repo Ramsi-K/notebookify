@@ -38,3 +38,24 @@ The project’s new name represents its goal: to simplify and streamline the pro
 - **Interactive Visualizations**: Some Plotly and widget outputs are not fully rendered.
 - **Conversion Time**: Processing large notebooks can take several minutes.
 - **Missing Outputs**: Certain edge-case outputs may not appear due to Jinja2 or nbconvert limitations.
+
+### Colab-Specific Rendering Quirks
+
+While testing Markdown outputs in Google Colab, the following issues were identified:
+
+1. **Inline Images**:
+   - Markdown rendering in Colab often fails for inline images using `data:image/png;base64`.
+   - Temporary Solution: Save images as separate files and link them using relative paths.
+
+2. **Interactive Outputs (Plotly)**:
+   - Interactive outputs like Plotly are not supported directly in Colab Markdown.
+   - Temporary Solution: Export Plotly visualizations as static images and include links or snapshots in the Markdown.
+
+3. **Text Wrapping**:
+   - Long lines of text in code cells may not wrap properly, causing layout issues.
+   - Temporary Solution: Use `pre-wrap` CSS styling for better handling.
+
+### Future Improvements
+
+- Explore rendering workarounds using custom Colab scripts or external Markdown previewers.
+- Investigate using nbconvert extensions for enhanced compatibility.
