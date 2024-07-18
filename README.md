@@ -59,3 +59,26 @@ While testing Markdown outputs in Google Colab, the following issues were identi
 
 - Explore rendering workarounds using custom Colab scripts or external Markdown previewers.
 - Investigate using nbconvert extensions for enhanced compatibility.
+
+### Selenium Setup
+
+For capturing iframe snapshots, Notebookify integrates Selenium. To set this up:
+
+1. **Install Selenium**:
+
+  ``` bash
+    pip install selenium
+  ```
+
+2. **Download ChromeDriver**:
+
+- Visit [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads).
+- Ensure the version matches your Chrome browser.
+
+3. **Update Path**:
+
+- Place the downloaded `chromedriver` binary in your system PATH or update the script with its location.
+
+4. **Usage**:
+
+- The `capture_iframe_snapshot` function in `markdown_converter.py` demonstrates how to capture iframe snapshots.

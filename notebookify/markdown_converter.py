@@ -3,7 +3,11 @@ from jinja2 import Environment, FileSystemLoader
 import os
 import logging
 import plotly.io as pio
-
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -76,3 +80,38 @@ class MarkdownConverter:
             with open(placeholder_path, "w") as f:
                 f.write(f"# Plotly Snapshot Error\n\nError: {e}")
             return placeholder_path
+
+
+def capture_iframe_snapshot(url, output_path):
+    """
+    Capture a snapshot of an iframe from a given URL using Selenium.
+
+    Args:
+        url (str): The URL containing the iframe.
+        output_path (str): Path to save the snapshot image.
+
+    Returns:
+        None
+    """
+    try:
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        service = Service(
+            "path/to/chromedriver"
+        )  # Update with the path to chromedriver
+
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.get(url)
+        time.sleep(3)  # Wait for the iframe to load
+
+        iframe = driver.find_element(By.TAG_NAME, "iframe")
+        driver.switch_to.frame(iframe)
+
+        driver.save_screenshot(output_path)
+        print(f"Snapshot saved to {output_path}")
+
+        driver.quit()
+    except Exception as e:
+        print(f"Error capturing iframe snapshot: {e}")

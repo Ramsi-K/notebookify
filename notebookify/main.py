@@ -5,6 +5,7 @@ from google_drive_uploader import (
 )
 from utils import ensure_folder_exists
 import logging
+from markdown_converter import capture_iframe_snapshot
 
 logging.basicConfig(level=logging.INFO)
 
