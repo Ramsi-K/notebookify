@@ -1,84 +1,85 @@
-# Notebookify: Current Features
+# Notebookify
 
-- Convert Jupyter Notebooks to Markdown format using `convert_to_markdown.py`.
-- Basic handling for text and plots.
-- Simplifies sharing via Markdown while retaining the ability to regenerate outputs if required.
+Notebookify is a Python tool that converts Jupyter notebooks into shareable Markdown files with enhanced support for visualizations, templates, and cloud uploads.
 
-## Rebranding to Notebookify
+## Features
 
-Notebookify is the next evolution of the initial convert_to_markdown.py script. What started as a simple tool to convert Jupyter notebooks into Markdown files has grown into a more comprehensive and modular project.
+- Converts Jupyter notebooks to Markdown using `nbconvert` or custom templates.
+- Supports embedding images and interactive Plotly visualizations.
+- Google Drive integration for seamless file sharing.
+- Batch processing for multiple notebooks.
+- Experimental Selenium support for iframe snapshot rendering.
+- Plotly visualizations saved as static PNG snapshots using `plotly.io.write_image`.
+- Detailed logging of all actions and errors stored in `notebookify.log`.
 
-### Key Changes
+## Challenges Faced
 
-- **Project Name:** The tool has been rebranded to Notebookify to reflect its broader scope and purpose.
-- Modular Design: The codebase has been refactored into a structured package to improve scalability and maintainability.
-- Folder Cleanup Logic: Added functionality to manage and delete temporary folders, ensuring efficient resource handling.
-- End-to-End Workflow: Initial end-to-end tests for converting, managing, and cleaning outputs have been implemented.
+1. **Handling Large Outputs**:
+   - Large outputs in notebooks caused rendering and upload issues.
+2. **Interactive Content**:
+   - Plotly and iframe visualizations required custom handling to generate static snapshots.
+3. **Dynamic Paths**:
+   - Debugging path inconsistencies for local files and Google Drive uploads consumed significant time.
 
-## Why Notebookify?
+## Lessons Learned
 
-The project’s new name represents its goal: to simplify and streamline the process of converting, managing, and sharing notebooks in a flexible and user-friendly manner. Whether for Markdown conversion, cloud integration, or custom templates, Notebookify is designed to adapt to diverse workflows.
+1. **Iterative Development**:
+   - Breaking the project into small, testable components reduced complexity.
+2. **Importance of Logging**:
+   - Adding detailed logs improved debugging efficiency.
+3. **Flexibility in Tools**:
+   - Experimenting with libraries helped identify the best solutions.
 
-### Features
+## Known Issues
 
-- Plotly visualizations are now saved as static PNG snapshots using `plotly.io.write_image`.
-- **Detailed Logging**: Logs all major actions and errors during notebook conversion, uploads, and rendering.
-  - Logs are stored in `notebookify.log`.
-- **Automatic Folder Cleanup**: Ensures temporary files and folders are cleaned up after processing.
-- **Modular Folder Management**: Handles folder creation and resource management efficiently for batch processing.
-- **Batch Processing**: Convert and upload multiple notebooks in a single execution, streamlining the workflow for large-scale projects.
-- **Enhanced Output Formatting**: The Jinja2 templates now handle Markdown, code, text streams, and static images with appropriate formatting.
+1. **Interactive Outputs**:
+   - Plotly and widget outputs are not fully rendered in Markdown.
+2. **Conversion Time**:
+   - Processing large notebooks can be slow.
+3. **Colab-Specific Rendering Quirks**:
+   - Inline images fail, interactive outputs are unsupported, and text wrapping issues occur.
 
-### Known Issues
+## Future Plans
 
-- If `kaleido` is not installed, Plotly snapshots may not work. Install it with `pip install -U kaleido`.
+- **Enhanced Visualization Support**:
+  - Explore better handling for Plotly and other 3D visualizations.
+- **Cloud Integration**:
+  - Add support for AWS S3 and Dropbox.
+- **Improved Batch Processing**:
+  - Optimize batch processing logic for large-scale notebook management.
 
-### Known Issues with Large Notebooks
+## Selenium Setup
 
-- **Interactive Visualizations**: Some Plotly and widget outputs are not fully rendered.
-- **Conversion Time**: Processing large notebooks can take several minutes.
-- **Missing Outputs**: Certain edge-case outputs may not appear due to Jinja2 or nbconvert limitations.
+### Steps
 
-### Colab-Specific Rendering Quirks
+1. Install Selenium:
 
-While testing Markdown outputs in Google Colab, the following issues were identified:
+   ```
+   pip install selenium
+   ```
 
-1. **Inline Images**:
-   - Markdown rendering in Colab often fails for inline images using `data:image/png;base64`.
-   - Temporary Solution: Save images as separate files and link them using relative paths.
+2. Download ChromeDriver:
+   - Visit [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads).
+3. Update Path:
+   - Place the `chromedriver` binary in your PATH or specify its location in the script.
 
-2. **Interactive Outputs (Plotly)**:
-   - Interactive outputs like Plotly are not supported directly in Colab Markdown.
-   - Temporary Solution: Export Plotly visualizations as static images and include links or snapshots in the Markdown.
+## Get Started
 
-3. **Text Wrapping**:
-   - Long lines of text in code cells may not wrap properly, causing layout issues.
-   - Temporary Solution: Use `pre-wrap` CSS styling for better handling.
+1. Clone the repository:
 
-### Future Improvements
+   ```
+   git clone https://github.com/Ramsi-K/notebookify.git
+   cd notebookify
+   ```
 
-- Explore rendering workarounds using custom Colab scripts or external Markdown previewers.
-- Investigate using nbconvert extensions for enhanced compatibility.
+2. Install dependencies:
 
-### Selenium Setup
+   ```
+   pip install -r requirements.txt
+   ```
 
-For capturing iframe snapshots, Notebookify integrates Selenium. To set this up:
+3. Convert a notebook:
 
-1. **Install Selenium**:
-
-  ``` bash
-    pip install selenium
-  ```
-
-2. **Download ChromeDriver**:
-
-- Visit [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads).
-- Ensure the version matches your Chrome browser.
-
-3. **Update Path**:
-
-- Place the downloaded `chromedriver` binary in your system PATH or update the script with its location.
-
-4. **Usage**:
-
-- The `capture_iframe_snapshot` function in `markdown_converter.py` demonstrates how to capture iframe snapshots.
+   ```
+   python markdown_converter.py --input example_notebook.ipynb --output markdown_outputs/
+   ```
