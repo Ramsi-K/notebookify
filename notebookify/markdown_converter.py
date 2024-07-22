@@ -27,23 +27,46 @@ class MarkdownConverter:
 
             # Process Plotly outputs and save snapshots
             for cell in notebook["cells"]:
-                if cell["cell_type"] == "code" and "outputs" in cell:
+                if "outputs" in cell:
                     for output in cell["outputs"]:
-                        if "application/vnd.plotly.v1+json" in output.get(
-                            "data", {}
-                        ):
-                            self.logger.info(
-                                "Found Plotly visualization. Saving snapshot."
+                        try:
+                            if output["output_type"] == "execute_result":
+                                if "text/plain" in output.data:
+                                    processed_output = output.data[
+                                        "text/plain"
+                                    ]
+                                elif "image/png" in output.data:
+                                    processed_output = f"![Image](data:image/png;base64,{output.data['image/png']})"
+                                elif (
+                                    "application/vnd.plotly.v1+json"
+                                    in output.data
+                                ):
+                                    # Handle Plotly outputs
+                                    processed_output = save_plotly_snapshot(
+                                        output["data"][
+                                            "application/vnd.plotly.v1+json"
+                                        ],
+                                        output_dir=os.path.dirname(
+                                            output_path
+                                        ),
+                                    )
+                                else:
+                                    # Unsupported output
+                                    processed_output = (
+                                        handle_unsupported_output(output)
+                                    )
+                            else:
+                                # Skip non-execute outputs for now
+                                processed_output = handle_unsupported_output(
+                                    output
+                                )
+
+                            # Write the processed_output to the Markdown file here
+                        except Exception as e:
+                            logger.error(f"Error processing output: {e}")
+                            processed_output = handle_unsupported_output(
+                                output
                             )
-                            plotly_data = output["data"][
-                                "application/vnd.plotly.v1+json"
-                            ]
-                            snapshot_path = self.save_plotly_snapshot(
-                                plotly_data,
-                                os.path.dirname(output_path),
-                                f"{os.path.basename(output_path).replace('.md', '')}_plotly.png",
-                            )
-                            output["plotly_snapshot"] = snapshot_path
 
             template = self.env.get_template(template_name)
             markdown_output = template.render(
@@ -115,3 +138,12 @@ def capture_iframe_snapshot(url, output_path):
         driver.quit()
     except Exception as e:
         print(f"Error capturing iframe snapshot: {e}")
+
+
+def handle_unsupported_output(output):
+    """
+    Logs unsupported output types and skips processing.
+    """
+    logger.warning(f"Unsupported output type encountered: {output}")
+    # Optionally write a placeholder message to the Markdown output
+    return f"<!-- Unsupported output type: {output} -->"
