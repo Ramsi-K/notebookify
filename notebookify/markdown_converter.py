@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
+import nbconvert
+from google_drive_uploader import upload_to_google_drive
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ class MarkdownConverter:
                                     in output.data
                                 ):
                                     # Handle Plotly outputs
-                                    processed_output = save_plotly_snapshot(
+                                    processed_output = self.save_plotly_snapshot(
                                         output["data"][
                                             "application/vnd.plotly.v1+json"
                                         ],
@@ -147,3 +149,62 @@ def handle_unsupported_output(output):
     logger.warning(f"Unsupported output type encountered: {output}")
     # Optionally write a placeholder message to the Markdown output
     return f"<!-- Unsupported output type: {output} -->"
+
+
+def safe_create_folder(folder_path):
+    """
+    Ensures the folder exists, creating it if necessary. Logs the action.
+    """
+    try:
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            logger.info(f"Created folder: {folder_path}")
+        else:
+            logger.info(f"Folder already exists: {folder_path}")
+    except Exception as e:
+        logger.error(f"Error creating folder {folder_path}: {e}")
+        raise
+
+
+def convert_notebook_to_markdown(notebook_path, output_dir):
+    """
+    Converts a notebook file to a Markdown file and saves it to the output directory.
+    """
+    logger.info(f"Starting Markdown conversion for {notebook_path}")
+    safe_create_folder(output_dir)
+
+    try:
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            notebook = nbformat.read(f, as_version=4)
+
+        exporter = nbconvert.MarkdownExporter()
+        body, _ = exporter.from_notebook_node(notebook)
+
+        output_file = os.path.join(
+            output_dir,
+            os.path.basename(notebook_path).replace(".ipynb", ".md"),
+        )
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(body)
+
+        logger.info(f"Markdown file saved to: {output_file}")
+        return output_file
+    except Exception as e:
+        logger.error(f"Error during Markdown conversion: {e}")
+        raise
+
+
+def process_batch_notebooks(notebook_paths, output_dir, service):
+    """
+    Converts a batch of notebooks to Markdown and uploads them to Google Drive.
+    """
+    safe_create_folder(output_dir)
+    for notebook_path in notebook_paths:
+        try:
+            logger.info(f"Processing notebook: {notebook_path}")
+            markdown_file = convert_notebook_to_markdown(
+                notebook_path, output_dir
+            )
+            upload_to_google_drive(service, markdown_file)
+        except Exception as e:
+            logger.error(f"Error processing {notebook_path}: {e}")
