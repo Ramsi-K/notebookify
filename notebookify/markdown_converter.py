@@ -199,12 +199,18 @@ def process_batch_notebooks(notebook_paths, output_dir, service):
     Converts a batch of notebooks to Markdown and uploads them to Google Drive.
     """
     safe_create_folder(output_dir)
+    logger.info("Starting batch processing of notebooks.")
+
     for notebook_path in notebook_paths:
         try:
             logger.info(f"Processing notebook: {notebook_path}")
             markdown_file = convert_notebook_to_markdown(
                 notebook_path, output_dir
             )
-            upload_to_google_drive(service, markdown_file)
+            if service:
+                upload_to_google_drive(service, markdown_file)
         except Exception as e:
-            logger.error(f"Error processing {notebook_path}: {e}")
+            logger.error(f"Error processing notebook {notebook_path}: {e}")
+            continue
+
+    logger.info("Batch processing completed.")
