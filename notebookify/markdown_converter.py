@@ -214,3 +214,46 @@ def process_batch_notebooks(notebook_paths, output_dir, service):
             continue
 
     logger.info("Batch processing completed.")
+
+
+def convert_to_markdown_with_template(
+    notebook_path, output_path, template_path
+):
+    logger.info(f"Starting Markdown conversion for {notebook_path}")
+    with open(notebook_path, "r") as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    env = Environment(loader=FileSystemLoader("/path/to/templates"))
+    template = env.get_template(template_path)
+
+    # Prepare the cells for rendering
+    for cell in notebook["cells"]:
+        if "outputs" in cell:
+            for output in cell["outputs"]:
+                if "data" in output:
+                    if "application/vnd.plotly.v1+json" in output["data"]:
+                        logger.info("Found Plotly visualization.")
+                        plotly_snapshot_path = MarkdownConverter.save_plotly_snapshot(
+                            output["data"]["application/vnd.plotly.v1+json"],
+                            os.path.dirname(output_path),
+                            f"{os.path.basename(output_path).replace('.md', '')}_plotly.png",
+                        )
+                        output["plotly_snapshot"] = plotly_snapshot_path
+                    elif "image/png" not in output["data"]:
+                        logger.warning(
+                            f"Unsupported output type: {list(output['data'].keys())}"
+                        )
+                        output["unsupported_message"] = (
+                            f"Unsupported format: {list(output['data'].keys())}"
+                        )
+
+    # Render the Markdown output
+    markdown_output = template.render(
+        cells=notebook["cells"],
+        repo_name="Ramsi-K/notebookify",
+        notebook_name=os.path.basename(notebook_path),
+    )
+
+    # Save to output path
+    with open(output_path, "w") as f:
+        f.write(markdown_output)

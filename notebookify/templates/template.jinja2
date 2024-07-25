@@ -14,6 +14,8 @@
                 {{ output.data['text/plain'] }}
             {% elif 'application/vnd.plotly.v1+json' in output.data %}
                 ![Plotly Visualization Placeholder](images/plotly_placeholder.png)
+            {% elif "unsupported_message" in output %}
+                    > {{ output.unsupported_message }}
             {% endif %}
         {% elif output.output_type == 'display_data' %}
             {% if 'image/png' in output.data %}
