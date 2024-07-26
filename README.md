@@ -30,14 +30,31 @@ Notebookify is a Python tool that converts Jupyter notebooks into shareable Mark
 3. **Flexibility in Tools**:
    - Experimenting with libraries helped identify the best solutions.
 
-## Known Issues
+### Known Issues
 
-1. **Interactive Outputs**:
-   - Plotly and widget outputs are not fully rendered in Markdown.
-2. **Conversion Time**:
-   - Processing large notebooks can be slow.
-3. **Colab-Specific Rendering Quirks**:
-   - Inline images fail, interactive outputs are unsupported, and text wrapping issues occur.
+#### Interactive Outputs
+
+- Some interactive visualizations (e.g., widgets, Plotly) are not fully supported.
+- Temporary Solution: Convert Plotly outputs to static images using the `plotly.io` module.
+
+#### Colab-Specific Quirks
+
+- Inline images and Markdown rendering have known issues in Google Colab.
+- Some unsupported outputs may appear as empty placeholders.
+
+#### Batch Processing
+
+- Processing large batches of notebooks can result in slower performance due to redundant folder creation and cleanup.
+
+#### Unsupported MIME Types
+
+- Custom or rarely used MIME types are not rendered in the Markdown output. These are logged for user reference but require manual handling.
+
+### Future Improvements
+
+- Enhance support for interactive outputs with extensions or custom rendering.
+- Implement better performance optimizations for batch processing.
+- Explore integration with other cloud storage platforms (e.g., AWS, Dropbox).
 
 ## Future Plans
 
