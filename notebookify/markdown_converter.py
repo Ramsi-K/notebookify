@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
 import nbconvert
+import shutil
 from google_drive_uploader import upload_to_google_drive
 
 logger = logging.getLogger(__name__)
@@ -105,6 +106,23 @@ class MarkdownConverter:
             with open(placeholder_path, "w") as f:
                 f.write(f"# Plotly Snapshot Error\n\nError: {e}")
             return placeholder_path
+
+    @staticmethod
+    def cleanup_folder(folder_path):
+        """
+        Remove a folder and its contents if it exists.
+        Ensures cleanup happens after all processing is completed.
+        """
+        try:
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+                logger.info(f"Successfully cleaned up folder: {folder_path}")
+            else:
+                logger.warning(
+                    f"Folder does not exist and cannot be cleaned: {folder_path}"
+                )
+        except Exception as e:
+            logger.error(f"Error during folder cleanup: {e}")
 
 
 def capture_iframe_snapshot(url, output_path):
