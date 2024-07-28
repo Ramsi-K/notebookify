@@ -12,6 +12,10 @@ import nbconvert
 import shutil
 from google_drive_uploader import upload_to_google_drive
 
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -237,40 +241,42 @@ def process_batch_notebooks(notebook_paths, output_dir, service):
 def convert_to_markdown_with_template(
     notebook_path, output_path, template_path
 ):
-    logger.info(f"Starting Markdown conversion for {notebook_path}")
-    with open(notebook_path, "r") as f:
-        notebook = nbformat.read(f, as_version=4)
+    """
+    Converts a notebook to Markdown using a Jinja2 template and processes outputs.
+    """
+    try:
+        # Load the notebook
+        with open(notebook_path, "r") as f:
+            notebook = nbformat.read(f, as_version=4)
 
-    env = Environment(loader=FileSystemLoader("/path/to/templates"))
-    template = env.get_template(template_path)
+        # Load Jinja2 environment and template
+        env = Environment(loader=FileSystemLoader("/path/to/templates"))
+        template = env.get_template(template_path)
 
-    # Prepare the cells for rendering
-    for cell in notebook["cells"]:
-        if "outputs" in cell:
-            for output in cell["outputs"]:
-                if "data" in output:
-                    if "application/vnd.plotly.v1+json" in output["data"]:
-                        logger.info("Found Plotly visualization.")
-                        plotly_snapshot_path = MarkdownConverter.save_plotly_snapshot(
-                            output["data"]["application/vnd.plotly.v1+json"],
-                            os.path.dirname(output_path),
-                            f"{os.path.basename(output_path).replace('.md', '')}_plotly.png",
+        # Process outputs for rendering
+        for cell in notebook["cells"]:
+            if "outputs" in cell:
+                for output in cell["outputs"]:
+                    # Handle image/png outputs (base64 encoding)
+                    if "image/png" in output.get("data", {}):
+                        logger.info(
+                            f"Encoding image/png for cell in {notebook_path}"
                         )
-                        output["plotly_snapshot"] = plotly_snapshot_path
-                    elif "image/png" not in output["data"]:
-                        logger.warning(
-                            f"Unsupported output type: {list(output['data'].keys())}"
-                        )
-                        output["unsupported_message"] = (
-                            f"Unsupported format: {list(output['data'].keys())}"
-                        )
+                        output["data"]["image/png"] = output["data"][
+                            "image/png"
+                        ].replace("\n", "")
 
-    # Render the Markdown output
-    markdown_output = template.render(
-        cells=notebook["cells"],
-        repo_name="Ramsi-K/notebookify",
-        notebook_name=os.path.basename(notebook_path),
-    )
+        # Render Markdown
+        markdown_output = template.render(cells=notebook["cells"])
+
+        # Save output
+        with open(output_path, "w") as f:
+            f.write(markdown_output)
+
+        logger.info(f"Converted notebook saved to {output_path}")
+    except Exception as e:
+        logger.error(f"Error during Markdown conversion: {e}")
+        raise
 
     # Save to output path
     with open(output_path, "w") as f:
