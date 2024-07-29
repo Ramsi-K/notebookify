@@ -1,11 +1,11 @@
-from markdown_converter import MarkdownConverter
-from google_drive_uploader import (
+from notebookify.src.markdown_converter import MarkdownConverter
+from notebookify.src.google_drive_uploader import (
     authenticate_google_drive,
     process_batch_notebooks,
 )
-from utils import ensure_folder_exists
+from notebookify.src.utils import ensure_folder_exists
 import logging
-from markdown_converter import capture_iframe_snapshot
+from notebookify.src.markdown_converter import capture_iframe_snapshot
 
 logging.basicConfig(level=logging.INFO)
 

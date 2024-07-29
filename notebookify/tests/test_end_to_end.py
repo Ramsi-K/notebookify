@@ -1,6 +1,6 @@
 import os
 import shutil
-from markdown_converter import (
+from notebookify.src.markdown_converter import (
     convert_to_markdown_with_template,
     ensure_folder_exists,
 )

@@ -1,84 +1,68 @@
 # Notebookify
 
-Notebookify is a Python tool that converts Jupyter notebooks into shareable Markdown files with enhanced support for visualizations, templates, and cloud uploads.
+Notebookify is a Python tool that converts Jupyter notebooks into shareable Markdown files, featuring template-based customization and seamless integration with Google Drive.
 
 ## Features
 
-- Converts Jupyter notebooks to Markdown using `nbconvert` or custom templates.
-- Supports embedding images and interactive Plotly visualizations.
-- Google Drive integration for seamless file sharing.
+- Converts Jupyter notebooks to Markdown with support for custom templates.
+- Google Drive integration for quick sharing of outputs.
 - Batch processing for multiple notebooks.
-- Experimental Selenium support for iframe snapshot rendering.
-- Plotly visualizations saved as static PNG snapshots using `plotly.io.write_image`.
-- Detailed logging of all actions and errors stored in `notebookify.log`.
+- Modular design for easier maintenance and extensibility.
 
-## Challenges Faced
+## Current Repository Structure
 
-1. **Handling Large Outputs**:
-   - Large outputs in notebooks caused rendering and upload issues.
-2. **Interactive Content**:
-   - Plotly and iframe visualizations required custom handling to generate static snapshots.
-3. **Dynamic Paths**:
-   - Debugging path inconsistencies for local files and Google Drive uploads consumed significant time.
+The project is being actively reorganized to improve clarity and functionality. Here’s the current structure:
 
-## Lessons Learned
+```
+Notebookify/
+├── src/                            # Source code for Notebookify
+│   ├── __init__.py                 # Makes this a package
+│   ├── markdown_converter.py       # Core Markdown conversion logic
+│   ├── utils.py                    # Utility functions
+│   ├── drive_metadata.py           # Google Drive file handling
+│   ├── credentials.json            # Google API credentials (ignored in git)
+│   ├── token.json                  # OAuth token for Google Drive (ignored in git)
+├── templates/                      # Templates for Markdown rendering
+│   └── index.md.j2                 # Jinja2 template for Markdown conversion
+├── setup/                          # Setup and execution scripts
+│   ├── notebookify.bat             # Windows batch script
+│   ├── notebookify.sh              # Linux/macOS shell script
+├── examples/                       # Sample notebooks and expected outputs
+│   ├── sample_notebook.ipynb       # Example notebook for testing
+│   ├── expected_output.md          # Expected Markdown output
+├── docs/                           # Documentation
+│   ├── GIT_LFS_Findings.md         # Documentation on Git LFS
+│   ├── README.md                   # Project documentation
+├── tests/                          # Unit tests
+│   ├── test_markdown_converter.py  # Tests for markdown conversion
+│   ├── test_utils.py               # Tests for utility functions
+├── requirements.txt                # Python dependencies
+├── environment.yml                 # Conda environment configuration
+├── setup.py                        # Installation script
+├── .gitignore                      # Ignored files
+```
 
-1. **Iterative Development**:
-   - Breaking the project into small, testable components reduced complexity.
-2. **Importance of Logging**:
-   - Adding detailed logs improved debugging efficiency.
-3. **Flexibility in Tools**:
-   - Experimenting with libraries helped identify the best solutions.
+## Today’s Updates
 
-### Known Issues
+1. **Repository Structure**:
+   - Reorganized the repository to separate source code, templates, and documentation.
+   - Introduced a `src/` directory for all Python scripts.
+   - Moved `templates/` outside `src/` to separate static assets.
 
-#### Interactive Outputs
+2. **README Alignment**:
+   - Updated the README to reflect the reorganized structure.
+   - Added placeholders for upcoming updates.
 
-- Some interactive visualizations (e.g., widgets, Plotly) are not fully supported.
-- Temporary Solution: Convert Plotly outputs to static images using the `plotly.io` module.
+## Known Issues
 
-#### Colab-Specific Quirks
+- Some interactive visualizations and unsupported MIME types are still under review.
+- Batch processing performance optimizations are ongoing.
 
-- Inline images and Markdown rendering have known issues in Google Colab.
-- Some unsupported outputs may appear as empty placeholders.
+## Next Steps
 
-#### Batch Processing
-
-- Processing large batches of notebooks can result in slower performance due to redundant folder creation and cleanup.
-
-#### Unsupported MIME Types
-
-- Custom or rarely used MIME types are not rendered in the Markdown output. These are logged for user reference but require manual handling.
-
-### Future Improvements
-
-- Enhance support for interactive outputs with extensions or custom rendering.
-- Implement better performance optimizations for batch processing.
-- Explore integration with other cloud storage platforms (e.g., AWS, Dropbox).
-
-## Future Plans
-
-- **Enhanced Visualization Support**:
-  - Explore better handling for Plotly and other 3D visualizations.
-- **Cloud Integration**:
-  - Add support for AWS S3 and Dropbox.
-- **Improved Batch Processing**:
-  - Optimize batch processing logic for large-scale notebook management.
-
-## Selenium Setup
-
-### Steps
-
-1. Install Selenium:
-
-   ```
-   pip install selenium
-   ```
-
-2. Download ChromeDriver:
-   - Visit [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads).
-3. Update Path:
-   - Place the `chromedriver` binary in your PATH or specify its location in the script.
+- Integrate features like `drive_metadata.py` and finalize folder handling logic.
+- Expand README to include detailed usage examples for the reorganized structure.
+- Test end-to-end functionality after all components are in place.
 
 ## Get Started
 
@@ -98,5 +82,5 @@ Notebookify is a Python tool that converts Jupyter notebooks into shareable Mark
 3. Convert a notebook:
 
    ```
-   python markdown_converter.py --input example_notebook.ipynb --output markdown_outputs/
+   python src/markdown_converter.py --input examples/sample_notebook.ipynb --output examples/expected_output.md
    ```

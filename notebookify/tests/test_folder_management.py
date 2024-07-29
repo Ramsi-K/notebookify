@@ -1,6 +1,9 @@
 import os
 import pytest
-from markdown_converter import ensure_folder_exists, MarkdownConverter
+from notebookify.src.markdown_converter import (
+    ensure_folder_exists,
+    MarkdownConverter,
+)
 
 
 def test_ensure_folder_exists():

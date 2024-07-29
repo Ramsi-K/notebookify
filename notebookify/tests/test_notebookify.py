@@ -1,5 +1,5 @@
 import os
-from notebookify.markdown_converter import MarkdownConverter
+from notebookify.src.markdown_converter import MarkdownConverter
 
 
 def test_conversion():

@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 import nbconvert
 import shutil
-from google_drive_uploader import upload_to_google_drive
+from notebookify.src.google_drive_uploader import upload_to_google_drive
 
 # Logging setup
 logging.basicConfig(

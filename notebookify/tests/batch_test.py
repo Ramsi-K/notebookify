@@ -1,5 +1,5 @@
 import logging
-from markdown_converter import (
+from notebookify.src.markdown_converter import (
     process_batch_notebooks,
     authenticate_google_drive,
 )
