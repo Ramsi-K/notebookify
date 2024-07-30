@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import shutil
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -85,3 +86,16 @@ def save_metadata(metadata):
     metadata_path = get_metadata_path()
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=4)
+
+
+# Detect GitHub root directory
+def detect_github_root(notebook_path):
+    current_dir = os.path.dirname(notebook_path)
+    while current_dir:
+        if ".git" in os.listdir(current_dir):
+            return current_dir
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:
+            break
+        current_dir = parent_dir
+    return None
