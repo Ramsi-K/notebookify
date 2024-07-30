@@ -56,3 +56,32 @@ def handle_unsupported_output(output):
     """
     logger.warning(f"Unsupported output type encountered: {output}")
     return f"<!-- Unsupported output type: {output} -->"
+
+
+def get_metadata_path():
+    """Centralized path for drive metadata."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # credentials_path = os.path.join(script_dir, "credentials.json")
+    return os.path.join(script_dir, "drive_metadata.json")
+
+
+def load_metadata():
+    """Load drive metadata."""
+    metadata_path = get_metadata_path()
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            print(
+                f"{WARNING} Metadata file corrupted. Initializing new metadata."
+            )
+            return {}
+    return {}
+
+
+def save_metadata(metadata):
+    """Save metadata."""
+    metadata_path = get_metadata_path()
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f, indent=4)
