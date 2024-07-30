@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 import nbconvert
 import shutil
-from notebookify.src.google_drive_uploader import upload_to_google_drive
+from notebookify.src.drive import upload_to_google_drive
 
 
 import nbformat
@@ -151,6 +151,49 @@ class MarkdownConverter:
             raise
 
 
+def convert_to_markdown(
+    notebook_path, output_dir, colab_link=None, github_root=None
+):
+    """Convert notebook to Markdown."""
+    if not os.path.exists(notebook_path):
+        logger.error(f"Notebook file not found: {notebook_path}")
+        return None
+
+    # Validate notebook
+    if os.path.getsize(notebook_path) == 0:
+        logger.error(f"Notebook file is empty: {notebook_path}")
+        return None
+
+    try:
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            nb = nbformat.read(f, as_version=4)
+    except Exception as e:
+        logger.error(f"Invalid notebook format: {e}")
+        return None
+
+    # Use GitHub root for context if provided
+    if github_root:
+        logger.info(f"Detected GitHub root: {github_root}")
+
+    # Convert to Markdown
+    output_file = os.path.join(
+        output_dir, os.path.basename(notebook_path).replace(".ipynb", ".md")
+    )
+    exporter = MarkdownExporter()
+    exporter.template_file = get_template_path()  # Use custom template
+    body, resources = exporter.from_filename(notebook_path)
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(body)
+
+    # Add Colab link if available
+    if colab_link:
+        update_markdown_with_colab_link(output_file, colab_link)
+
+    logger.info(f"Markdown saved to: {output_file}")
+    return output_file
+
+
 def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
     converter = MarkdownConverter(template_dir)
 
@@ -165,3 +208,17 @@ def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
             upload_to_google_drive(service, output_file)
         except Exception as e:
             logger.error(f"Error processing notebook {notebook_path}: {e}")
+
+
+def update_markdown_with_colab_link(md_file_path, colab_link):
+    """Add the Colab link to the top of the Markdown file."""
+    with open(md_file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    colab_header = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({colab_link})\n\n"
+    updated_content = colab_header + content
+
+    with open(md_file_path, "w", encoding="utf-8") as f:
+        f.write(updated_content)
+
+    print(f"{Fore.GREEN}Colab link added to Markdown file")
