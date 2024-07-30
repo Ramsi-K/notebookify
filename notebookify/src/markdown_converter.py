@@ -1,21 +1,12 @@
 import nbformat
 from jinja2 import Environment, FileSystemLoader
-import os
-import logging
-import plotly.io as pio
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-import time
-import nbconvert
-import shutil
-from notebookify.src.drive import upload_to_google_drive
-
-
-import nbformat
-from jinja2 import Environment, FileSystemLoader
-from src.utils import safe_create_folder, handle_unsupported_output
+from src.utils import (
+    safe_create_folder,
+    handle_unsupported_output,
+    get_template_path,
+)
+from src.drive import upload_to_google_drive
+from nbconvert import MarkdownExporter
 import os
 import logging
 
@@ -27,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class MarkdownConverter:
+    """
+    A class for converting Jupyter notebooks to Markdown using Jinja2 templates.
+    """
+
     def __init__(self, template_dir):
         self.env = Environment(loader=FileSystemLoader(template_dir))
 
@@ -52,11 +47,23 @@ class MarkdownConverter:
 
     @staticmethod
     def _load_notebook(notebook_path):
-        with open(notebook_path, "r", encoding="utf-8") as f:
-            return nbformat.read(f, as_version=4)
+        """
+        Loads a Jupyter notebook file.
+        """
+        try:
+            with open(notebook_path, "r", encoding="utf-8") as f:
+                return nbformat.read(f, as_version=4)
+        except Exception as e:
+            logger.error(
+                f"Failed to load notebook: {notebook_path}. Error: {e}"
+            )
+            raise
 
     @staticmethod
     def _process_cells(cells):
+        """
+        Processes notebook cells and extracts their outputs.
+        """
         for cell in cells:
             if "outputs" in cell:
                 cell["processed_outputs"] = [
@@ -67,6 +74,9 @@ class MarkdownConverter:
 
     @staticmethod
     def _process_output(output):
+        """
+        Processes individual cell outputs based on their types.
+        """
         try:
             if output["output_type"] == "execute_result":
                 if "text/plain" in output.data:
@@ -85,116 +95,30 @@ class MarkdownConverter:
     @staticmethod
     def _process_plotly_output(plotly_data):
         """
-        Placeholder for processing Plotly outputs.
+        Processes Plotly outputs.
+        Currently a placeholder; add functionality as needed.
         """
-        return "<!-- Plotly output -->"
+        logger.info("Processing Plotly output. Placeholder logic in place.")
+        return "<!-- Plotly output placeholder -->"
 
     @staticmethod
     def _save_markdown(output_path, markdown_output):
+        """
+        Saves the generated Markdown content to the specified path.
+        """
         safe_create_folder(os.path.dirname(output_path))
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(markdown_output)
-
-    def convert_to_nbconvert(self, notebook_path, output_dir):
-        """
-        Converts a notebook to Markdown using nbconvert and saves it to the output directory.
-        """
         try:
-            self.logger.info(f"Starting nbconvert for {notebook_path}")
-            safe_create_folder(output_dir)
-
-            with open(notebook_path, "r", encoding="utf-8") as f:
-                notebook = nbformat.read(f, as_version=4)
-
-            exporter = nbconvert.MarkdownExporter()
-            body, _ = exporter.from_notebook_node(notebook)
-
-            output_file = os.path.join(
-                output_dir,
-                os.path.basename(notebook_path).replace(".ipynb", ".md"),
-            )
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(body)
-
-            self.logger.info(f"Markdown file saved to: {output_file}")
-            return output_file
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(markdown_output)
         except Exception as e:
-            self.logger.error(f"Error during nbconvert: {e}")
+            logger.error(f"Error saving Markdown file: {e}")
             raise
-
-    def convert_with_custom_template(
-        self, notebook_path, output_path, template_path
-    ):
-        """
-        Converts a notebook to Markdown using a custom Jinja2 template.
-        """
-        try:
-            logger.info(
-                f"Converting notebook with custom template: {notebook_path}"
-            )
-            notebook = self._load_notebook(notebook_path)
-
-            # Load Jinja2 environment and template
-            template = self.env.get_template(template_path)
-
-            # Process outputs
-            processed_cells = self._process_cells(notebook["cells"])
-
-            # Render Markdown
-            markdown_output = template.render(cells=processed_cells)
-
-            # Save output
-            self._save_markdown(output_path, markdown_output)
-            logger.info(f"Converted notebook saved to {output_path}")
-        except Exception as e:
-            logger.error(f"Error during Markdown conversion: {e}")
-            raise
-
-
-def convert_to_markdown(
-    notebook_path, output_dir, colab_link=None, github_root=None
-):
-    """Convert notebook to Markdown."""
-    if not os.path.exists(notebook_path):
-        logger.error(f"Notebook file not found: {notebook_path}")
-        return None
-
-    # Validate notebook
-    if os.path.getsize(notebook_path) == 0:
-        logger.error(f"Notebook file is empty: {notebook_path}")
-        return None
-
-    try:
-        with open(notebook_path, "r", encoding="utf-8") as f:
-            nb = nbformat.read(f, as_version=4)
-    except Exception as e:
-        logger.error(f"Invalid notebook format: {e}")
-        return None
-
-    # Use GitHub root for context if provided
-    if github_root:
-        logger.info(f"Detected GitHub root: {github_root}")
-
-    # Convert to Markdown
-    output_file = os.path.join(
-        output_dir, os.path.basename(notebook_path).replace(".ipynb", ".md")
-    )
-    exporter = MarkdownExporter()
-    exporter.template_file = get_template_path()  # Use custom template
-    body, resources = exporter.from_filename(notebook_path)
-
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(body)
-
-    # Add Colab link if available
-    if colab_link:
-        update_markdown_with_colab_link(output_file, colab_link)
-
-    logger.info(f"Markdown saved to: {output_file}")
-    return output_file
 
 
 def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
+    """
+    Processes a batch of notebooks, converts them to Markdown, and uploads to Google Drive.
+    """
     converter = MarkdownConverter(template_dir)
 
     for notebook_path in notebook_paths:
@@ -211,14 +135,19 @@ def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
 
 
 def update_markdown_with_colab_link(md_file_path, colab_link):
-    """Add the Colab link to the top of the Markdown file."""
-    with open(md_file_path, "r", encoding="utf-8") as f:
-        content = f.read()
+    """
+    Adds a Colab link to the top of the Markdown file.
+    """
+    try:
+        with open(md_file_path, "r", encoding="utf-8") as f:
+            content = f.read()
 
-    colab_header = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({colab_link})\n\n"
-    updated_content = colab_header + content
+        colab_header = f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({colab_link})\n\n"
+        updated_content = colab_header + content
 
-    with open(md_file_path, "w", encoding="utf-8") as f:
-        f.write(updated_content)
+        with open(md_file_path, "w", encoding="utf-8") as f:
+            f.write(updated_content)
 
-    print(f"{Fore.GREEN}Colab link added to Markdown file")
+        logger.info(f"Colab link added to Markdown file: {md_file_path}")
+    except Exception as e:
+        logger.error(f"Error updating Markdown with Colab link: {e}")
