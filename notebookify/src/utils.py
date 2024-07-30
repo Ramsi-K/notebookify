@@ -1,10 +1,8 @@
 import os
 from pathlib import Path
 import shutil
-import logging
 import json
-
-logger = logging.getLogger(__name__)
+from src.logger import log_message, INFO, ERROR, WARNING
 
 
 def ensure_folder_exists(folder_path):
@@ -15,11 +13,11 @@ def ensure_folder_exists(folder_path):
     try:
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-            logger.info(f"Created folder: {folder_path}")
+            log_message(INFO, f"Created folder: {folder_path}")
         else:
-            logger.info(f"Folder already exists: {folder_path}")
+            log_message(INFO, f"Folder already exists: {folder_path}")
     except OSError as e:
-        logger.error(f"Failed to create folder {folder_path}: {e}")
+        log_message(ERROR, f"Failed to create folder {folder_path}: {e}")
         raise
 
 
@@ -30,9 +28,9 @@ def safe_create_folder(folder_path):
     try:
         folder = Path(folder_path)
         folder.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created folder: {folder}")
+        log_message(INFO, f"Created folder: {folder}")
     except Exception as e:
-        logger.error(f"Error creating folder {folder_path}: {e}")
+        log_message(ERROR, f"Error creating folder {folder_path}: {e}")
         raise
 
 
@@ -44,18 +42,18 @@ def cleanup_folder(folder_path):
         folder = Path(folder_path)
         if folder.exists():
             shutil.rmtree(folder)
-            logger.info(f"Successfully cleaned up folder: {folder}")
+            log_message(INFO, f"Successfully cleaned up folder: {folder}")
         else:
-            logger.warning(f"Folder does not exist: {folder}")
+            log_message(WARNING, f"Folder does not exist: {folder}")
     except Exception as e:
-        logger.error(f"Error during folder cleanup: {e}")
+        log_message(ERROR, f"Error during folder cleanup: {e}")
 
 
 def handle_unsupported_output(output):
     """
     Logs unsupported output types and skips processing.
     """
-    logger.warning(f"Unsupported output type encountered: {output}")
+    log_message(WARNING, f"Unsupported output type encountered: {output}")
     return f"<!-- Unsupported output type: {output} -->"
 
 
@@ -74,8 +72,8 @@ def load_metadata():
             with open(metadata_path, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            print(
-                f"{WARNING} Metadata file corrupted. Initializing new metadata."
+            log_message(
+                WARNING, f"Metadata file corrupted. Initializing new metadata."
             )
             return {}
     return {}
@@ -99,3 +97,13 @@ def detect_github_root(notebook_path):
             break
         current_dir = parent_dir
     return None
+
+
+def get_template_path(template_name="index.md.j2"):
+    """Retrieve the path to the custom template or default to nbconvert's template."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    custom_template = os.path.join(script_dir, "../templates", template_name)
+    if os.path.exists(custom_template):
+        return custom_template
+    log_message(WARNING, f"Custom template not found. Using default template.")
+    return "markdown"  # Fallback to default template
