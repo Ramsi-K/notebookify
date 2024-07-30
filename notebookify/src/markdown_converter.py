@@ -8,13 +8,7 @@ from src.utils import (
 from src.drive import upload_to_google_drive
 from nbconvert import MarkdownExporter
 import os
-import logging
-
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+from src.logger import log_message, INFO, WARNING, ERROR
 
 
 class MarkdownConverter:
@@ -32,7 +26,7 @@ class MarkdownConverter:
         Converts a notebook to Markdown using a Jinja2 template.
         """
         try:
-            logger.info(f"Converting notebook: {notebook_path}")
+            log_message(INFO, f"Converting notebook: {notebook_path}")
             notebook = self._load_notebook(notebook_path)
             processed_cells = self._process_cells(notebook["cells"])
 
@@ -40,9 +34,11 @@ class MarkdownConverter:
             markdown_output = template.render(cells=processed_cells)
 
             self._save_markdown(output_path, markdown_output)
-            logger.info(f"Conversion complete. Output saved to: {output_path}")
+            log_message(
+                INFO, f"Conversion complete. Output saved to: {output_path}"
+            )
         except Exception as e:
-            logger.error(f"Error converting notebook: {e}")
+            log_message(ERROR, f"Error converting notebook: {e}")
             raise
 
     @staticmethod
@@ -54,8 +50,8 @@ class MarkdownConverter:
             with open(notebook_path, "r", encoding="utf-8") as f:
                 return nbformat.read(f, as_version=4)
         except Exception as e:
-            logger.error(
-                f"Failed to load notebook: {notebook_path}. Error: {e}"
+            log_message(
+                ERROR, f"Failed to load notebook: {notebook_path}. Error: {e}"
             )
             raise
 
@@ -89,7 +85,7 @@ class MarkdownConverter:
                     )
             return handle_unsupported_output(output)
         except Exception as e:
-            logger.error(f"Error processing output: {e}")
+            log_message(ERROR, f"Error processing output: {e}")
             return handle_unsupported_output(output)
 
     @staticmethod
@@ -98,7 +94,9 @@ class MarkdownConverter:
         Processes Plotly outputs.
         Currently a placeholder; add functionality as needed.
         """
-        logger.info("Processing Plotly output. Placeholder logic in place.")
+        log_message(
+            INFO, "Processing Plotly output. Placeholder logic in place."
+        )
         return "<!-- Plotly output placeholder -->"
 
     @staticmethod
@@ -111,7 +109,7 @@ class MarkdownConverter:
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(markdown_output)
         except Exception as e:
-            logger.error(f"Error saving Markdown file: {e}")
+            log_message(ERROR, f"Error saving Markdown file: {e}")
             raise
 
 
@@ -123,7 +121,7 @@ def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
 
     for notebook_path in notebook_paths:
         try:
-            logger.info(f"Processing notebook: {notebook_path}")
+            log_message(INFO, f"Processing notebook: {notebook_path}")
             output_file = os.path.join(
                 output_dir,
                 os.path.basename(notebook_path).replace(".ipynb", ".md"),
@@ -131,7 +129,9 @@ def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
             converter.convert(notebook_path, output_file)
             upload_to_google_drive(service, output_file)
         except Exception as e:
-            logger.error(f"Error processing notebook {notebook_path}: {e}")
+            log_message(
+                ERROR, f"Error processing notebook {notebook_path}: {e}"
+            )
 
 
 def update_markdown_with_colab_link(md_file_path, colab_link):
@@ -148,6 +148,6 @@ def update_markdown_with_colab_link(md_file_path, colab_link):
         with open(md_file_path, "w", encoding="utf-8") as f:
             f.write(updated_content)
 
-        logger.info(f"Colab link added to Markdown file: {md_file_path}")
+        log_message(INFO, f"Colab link added to Markdown file: {md_file_path}")
     except Exception as e:
-        logger.error(f"Error updating Markdown with Colab link: {e}")
+        log_message(ERROR, f"Error updating Markdown with Colab link: {e}")
