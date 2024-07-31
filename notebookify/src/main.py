@@ -8,11 +8,18 @@ import sys
 from src.drive import (
     authenticate_drive,
     get_or_create_drive_folder,
-    upload_to_drive,
+    upload_to_google_drive,
 )
-from src.markdown_converter import MarkdownConverter, clear_outputs
-from src.utils import print_help, safe_create_folder
-from src.logger import INFO, WARNING, ERROR
+from src.markdown_converter import MarkdownConverter
+from src.utils import (
+    print_help,
+    safe_create_folder,
+    load_metadata,
+    save_metadata,
+    detect_github_root,
+    get_metadata_path,
+)
+from src.logger import log_message, INFO, WARNING, ERROR
 
 
 def parse_args():
@@ -32,6 +39,11 @@ def parse_args():
         "--template",
         type=str,
         help="Specify a custom Jinja2 template for Markdown conversion",
+    )
+    parser.add_argument(
+        "--refresh-metadata",
+        action="store_true",
+        help="Refresh Google Drive metadata",
     )
     parser.add_argument(
         "--no-drive", action="store_true", help="Skip Google Drive upload"
@@ -55,71 +67,110 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_notebook(notebook_path, args):
+def refresh_metadata(service):
+    """
+    Refresh Google Drive metadata.
+    """
+    try:
+        log_message(INFO, "Refreshing Google Drive metadata...")
+        metadata = {}
+        root_folder_id = get_or_create_drive_folder(
+            service, "Notebookify_Root"
+        )
+        metadata["drive_root"] = root_folder_id
+        save_metadata(metadata)
+        log_message(INFO, "Google Drive metadata refreshed successfully.")
+    except Exception as e:
+        log_message(ERROR, f"Failed to refresh metadata: {e}")
+
+
+def process_notebook(notebook_path, args, metadata):
     """Process a single notebook."""
     if not os.path.isfile(notebook_path) or not notebook_path.endswith(
         ".ipynb"
     ):
-        print(f"{ERROR} Invalid notebook path: {notebook_path}")
+        log_message(ERROR, f"Invalid notebook path: {notebook_path}")
         return
 
-    clear_output = (
-        args.clean
-        or input(f"{Fore.YELLOW}Clear outputs after conversion? (y/n)[y]: ")
-        .strip()
-        .lower()
-        != "n"
-    )
-    share_with_link = (
-        not args.no_drive
-        and input(f"{Fore.YELLOW}Make file public (y/n)[y]: ").strip().lower()
-        != "n"
-    )
-
-    # Conversion and upload
-    output_dir = args.output_dir or os.path.join(os.getcwd(), "output")
-    safe_create_folder(output_dir)
-    print(f"{INFO} Created output directory: {output_dir}")
-
-    converter = MarkdownConverter(template_dir="templates/")
-    md_file_path = converter.convert(notebook_path, output_dir)
-
-    if clear_output:
-        clear_outputs(notebook_path)
-
-    if not args.no_drive:
-        drive_service = authenticate_drive()
-        colab_link = upload_to_drive(
-            drive_service, notebook_path, share_with_link=share_with_link
+    # Detect GitHub root
+    github_root = detect_github_root(notebook_path)
+    if github_root:
+        log_message(INFO, f"Detected GitHub root: {github_root}")
+    else:
+        log_message(
+            WARNING,
+            "GitHub root not detected. Uploads will not reflect repository structure.",
         )
-        if colab_link:
-            print(f"{INFO} Colab link: {colab_link}")
+
+    # Upload Workflow
+    try:
+        output_dir = args.output_dir or os.path.dirname(notebook_path)
+        log_message(INFO, f"Output directory set to: {output_dir}")
+
+        # Convert notebook to Markdown
+        template_dir = args.template or "templates"
+        converter = MarkdownConverter(template_dir)
+        output_path = os.path.join(
+            output_dir,
+            os.path.basename(notebook_path).replace(".ipynb", ".md"),
+        )
+        converter.convert(notebook_path, output_path)
+
+        # Upload to Google Drive
+        if not args.no_drive:
+            service = authenticate_drive()
+            drive_folder_id = metadata.get("drive_root", None)
+            if not drive_folder_id:
+                drive_folder_id = get_or_create_drive_folder(
+                    service,
+                    (
+                        os.path.basename(github_root)
+                        if github_root
+                        else "Notebookify"
+                    ),
+                )
+                metadata["drive_root"] = drive_folder_id
+                save_metadata(metadata)
+
+            upload_to_google_drive(service, output_path, drive_folder_id)
         else:
-            print(f"{WARNING} Colab link not found.")
+            log_message(WARNING, "Google Drive upload skipped.")
+    except Exception as e:
+        log_message(ERROR, f"Failed to process notebook: {e}")
 
 
 def batch_process(directory, args):
     """Process all notebooks in a directory recursively."""
-    print(f"{INFO} Batch processing notebooks in directory: {directory}")
+    log_message(INFO, f"Batch processing notebooks in directory: {directory}")
+    metadata = load_metadata()
     for root, _, files in os.walk(directory):
         for file in files:
             if file.endswith(".ipynb"):
                 notebook_path = os.path.join(root, file)
-                print(f"{INFO} Processing notebook: {notebook_path}")
+                log_message(INFO, f"Processing notebook: {notebook_path}")
                 try:
-                    process_notebook(notebook_path, args)
+                    process_notebook(notebook_path, args, metadata)
                 except Exception as e:
-                    print(
-                        f"{ERROR} Failed to process {notebook_path}: {str(e)}"
+                    log_message(
+                        ERROR, f"Failed to process {notebook_path}: {str(e)}"
                     )
 
 
 def main():
     args = parse_args()
+    metadata = load_metadata()  # Load metadata once for all operations
     last_notebook_path = None  # To store the last processed notebook path
 
     if args.help:
         print_help()
+        return
+
+    if args.refresh_metadata:
+        try:
+            service = authenticate_drive()
+            refresh_metadata(service)
+        except Exception as e:
+            log_message(ERROR, f"Failed to refresh metadata: {e}")
         return
 
     if args.batch:
@@ -127,7 +178,7 @@ def main():
         return
 
     if args.notebook_path:
-        process_notebook(args.notebook_path, args)
+        process_notebook(args.notebook_path, args, metadata)
         return
 
     # Interactive mode fallback
@@ -144,15 +195,15 @@ def main():
             )
         else:
             notebook_path = last_notebook_path
-            print(f"{INFO} Retrying the last notebook: {notebook_path}")
+            log_message(INFO, f"Retrying the last notebook: {notebook_path}")
 
         try:
-            process_notebook(notebook_path, args)
+            process_notebook(notebook_path, args, metadata)
             last_notebook_path = (
                 notebook_path  # Update the last notebook path after processing
             )
         except Exception as e:
-            print(f"{ERROR} {str(e)}")
+            log_message(ERROR, f"{str(e)}")
 
         print("\nOptions:")
         print("1. Retry the same notebook.")
@@ -163,19 +214,20 @@ def main():
         if choice == "1":
             continue
         elif choice == "2":
-            print(f"{INFO} Starting a new notebook process...")
+            log_message(INFO, "Starting a new notebook process...")
+            last_notebook_path = None  # Reset last notebook path
         elif choice == "3":
-            print(f"{INFO} Exiting the script.")
+            log_message(INFO, "Exiting the script.")
             break
         else:
-            print(f"{ERROR} Invalid choice.")
+            log_message(ERROR, "Invalid choice.")
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(f"\n{INFO} Script interrupted by user.")
+        log_message(INFO, "Script interrupted by user.")
     finally:
-        print(f"{INFO} Execution complete. Closing environment.")
+        log_message(INFO, "Execution complete. Closing environment.")
         sys.exit(0)
