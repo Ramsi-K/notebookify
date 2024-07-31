@@ -5,10 +5,15 @@ from src.utils import (
     handle_unsupported_output,
     get_template_path,
 )
-from src.drive import upload_to_google_drive
-from nbconvert import MarkdownExporter
 import os
 from src.logger import log_message, INFO, WARNING, ERROR
+from src.utils import (
+    load_metadata,
+    save_metadata,
+    detect_github_root,
+    get_metadata_path,
+)
+from src.drive import upload_to_google_drive
 
 
 class MarkdownConverter:
