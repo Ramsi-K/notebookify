@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import json
 from src.logger import log_message, INFO, ERROR, WARNING
+from colorama import Fore, Style
 
 
 def ensure_folder_exists(folder_path):
@@ -107,3 +108,32 @@ def get_template_path(template_name="index.md.j2"):
         return custom_template
     log_message(WARNING, f"Custom template not found. Using default template.")
     return "markdown"  # Fallback to default template
+
+
+def print_help(script_name="Notebookify"):
+    """
+    Display help information for the script.
+
+    Args:
+        script_name (str): The name of the script/tool being described.
+    """
+    help_text = f"""
+    {Style.BRIGHT}{Fore.BLUE}{script_name}: Convert Jupyter notebooks to Markdown and upload to Google Drive.{Style.RESET_ALL}
+
+    {Fore.CYAN}Usage:
+        {script_name.lower()} [options] {Style.RESET_ALL}
+
+    {Fore.YELLOW}Options:{Style.RESET_ALL}
+        {Fore.GREEN}-h, --help{Style.RESET_ALL}          Show this help message and exit
+        {Fore.GREEN}-b, --batch DIRECTORY{Style.RESET_ALL} Process all notebooks in a directory (recursively)
+        {Fore.GREEN}-t, --template PATH{Style.RESET_ALL}  Specify a custom Jinja2 template for Markdown conversion
+        {Fore.GREEN}--no-drive{Style.RESET_ALL}          Skip Google Drive upload
+        {Fore.GREEN}--clean{Style.RESET_ALL}             Clear notebook outputs after Markdown conversion
+        {Fore.GREEN}-o, --output-dir PATH{Style.RESET_ALL} Specify an output directory for Markdown and assets
+
+    {Fore.MAGENTA}Examples:{Style.RESET_ALL}
+        {script_name.lower()} -h
+        {script_name.lower()} --clean "path/to/notebook.ipynb"
+        {script_name.lower()} --batch "path/to/notebooks/" --no-drive
+    """
+    log_message(INFO, help_text)

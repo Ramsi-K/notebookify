@@ -163,6 +163,7 @@ def main():
 
     if args.help:
         print_help()
+        sys.exit(0)  # Exit explicitly after displaying help
         return
 
     if args.refresh_metadata:
