@@ -118,9 +118,18 @@ class MarkdownConverter:
             raise
 
 
-def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
+def process_batch_notebooks(
+    notebook_paths, output_dir, template_dir, drive_service=None, refresh=False
+):
     """
-    Processes a batch of notebooks, converts them to Markdown, and uploads to Google Drive.
+    Processes a batch of notebooks, converts them to Markdown, and optionally uploads them to Google Drive.
+
+    Args:
+        notebook_paths (list): Paths to Jupyter notebooks to process.
+        output_dir (str): Directory to save converted Markdown files.
+        template_dir (str): Directory containing Jinja2 templates.
+        drive_service (object, optional): Google Drive service object for uploading files.
+        refresh (bool): Whether to refresh metadata for uploads.
     """
     converter = MarkdownConverter(template_dir)
 
@@ -131,8 +140,14 @@ def process_batch_notebooks(service, notebook_paths, output_dir, template_dir):
                 output_dir,
                 os.path.basename(notebook_path).replace(".ipynb", ".md"),
             )
+            # Convert the notebook to Markdown
             converter.convert(notebook_path, output_file)
-            upload_to_google_drive(service, output_file)
+
+            # Upload to Google Drive if service is provided
+            if drive_service:
+                upload_to_google_drive(
+                    drive_service, output_file, refresh=refresh
+                )
         except Exception as e:
             log_message(
                 ERROR, f"Error processing notebook {notebook_path}: {e}"
