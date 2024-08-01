@@ -10,7 +10,7 @@ from src.drive import (
     get_or_create_drive_folder,
     upload_to_google_drive,
 )
-from src.markdown_converter import MarkdownConverter
+from src.markdown_converter import MarkdownConverter, process_batch_notebooks
 from src.utils import (
     print_help,
     safe_create_folder,
@@ -140,20 +140,22 @@ def process_notebook(notebook_path, args, metadata):
 
 
 def batch_process(directory, args):
-    """Process all notebooks in a directory recursively."""
-    log_message(INFO, f"Batch processing notebooks in directory: {directory}")
-    metadata = load_metadata()
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".ipynb"):
-                notebook_path = os.path.join(root, file)
-                log_message(INFO, f"Processing notebook: {notebook_path}")
-                try:
-                    process_notebook(notebook_path, args, metadata)
-                except Exception as e:
-                    log_message(
-                        ERROR, f"Failed to process {notebook_path}: {str(e)}"
-                    )
+    """
+    Recursively processes all notebooks in a directory using the MarkdownConverter.
+    """
+    notebook_paths = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(directory)
+        for file in files
+        if file.endswith(".ipynb")
+    ]
+    process_batch_notebooks(
+        notebook_paths,
+        output_dir=args.output_dir,
+        template_dir=args.template,
+        drive_service=None if args.no_drive else authenticate_drive(),
+        refresh=args.refresh_metadata,
+    )
 
 
 def main():
@@ -169,6 +171,7 @@ def main():
     if args.refresh_metadata:
         try:
             service = authenticate_drive()
+            log_message(INFO, "Refreshing metadata during Drive operations.")
             refresh_metadata(service)
         except Exception as e:
             log_message(ERROR, f"Failed to refresh metadata: {e}")
