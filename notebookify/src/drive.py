@@ -2,13 +2,12 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 import os
-from src.utils import (
+from utils import (
     load_metadata,
     save_metadata,
     detect_github_root,
-    batch_process,
-)
-from src.logger import log_message, INFO, ERROR, WARNING
+    )
+from logger import log_message, INFO, ERROR, WARNING
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 TOKEN_PATH = "token.json"

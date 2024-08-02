@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import shutil
 import json
-from src.logger import log_message, INFO, ERROR, WARNING
+from logger import log_message, INFO, ERROR, WARNING
 from colorama import Fore, Style
 
 

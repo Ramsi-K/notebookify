@@ -5,13 +5,13 @@ import argparse
 from colorama import Fore
 import sys
 
-from src.drive import (
-    authenticate_drive,
+from drive import (
+    authenticate_google_drive,
     get_or_create_drive_folder,
     upload_to_google_drive,
 )
-from src.markdown_converter import MarkdownConverter, process_batch_notebooks
-from src.utils import (
+from markdown_converter import MarkdownConverter, process_batch_notebooks
+from utils import (
     print_help,
     safe_create_folder,
     load_metadata,
@@ -19,7 +19,7 @@ from src.utils import (
     detect_github_root,
     get_metadata_path,
 )
-from src.logger import log_message, INFO, WARNING, ERROR
+from logger import log_message, INFO, WARNING, ERROR
 
 
 def parse_args():
