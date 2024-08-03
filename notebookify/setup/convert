@@ -1,0 +1,17 @@
+#!/bin/bash
+# Notebookify Shell Script for Commit Repository
+
+# Path to Conda and environment
+CONDA_PATH="$(conda info --base)/etc/profile.d/conda.sh"
+ENV_NAME="notebookify_env"
+
+# Path to the Python script in the current repository
+SCRIPT_PATH="$(dirname "$(readlink -f "$0")")/../src/notebookify_main.py"
+
+# Check if Conda is installed and the specified path exists
+if [ -f "$CONDA_PATH" ]; then
+    bash -c "source $CONDA_PATH && conda activate $ENV_NAME && python \"$SCRIPT_PATH\" \"$@\" && conda deactivate"
+else
+    echo "[ERROR] Conda not found. Please ensure Conda is installed and available in your PATH."
+    exit 1
+fi
